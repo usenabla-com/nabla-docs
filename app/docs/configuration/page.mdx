@@ -1,0 +1,73 @@
+---
+title: Configuration
+description: File locations, precedence, environment overrides, and init.
+---
+
+# Configuration
+
+Nabla reads YAML configuration from well‑known locations and merges values with clear precedence. CLI flags always win.
+
+## Locations and precedence
+
+Nabla loads config in this order and merges top‑down (later wins):
+
+1) User config (preferred): `~/.config/nabla/config.yaml`
+2) User config (fallback): `~/.nabla/config.yaml`
+3) Workspace config: `./.nabla/config.yaml`
+4) Explicit config: `--config <path>` (highest precedence)
+
+<Callout type="info">CLI flags override all file settings. Environment variables override file settings but are overridden by CLI flags.</Callout>
+
+## Environment overrides
+
+Set any of the following to override matching config keys:
+
+- `NABLA_MIN_LEVEL` → `scan.min_level`
+- `NABLA_FAIL_ON` → `scan.fail_on`
+- `NABLA_SUMMARY` → `scan.summary`
+- `NABLA_SUMMARY_OUT` → `scan.summary_out`
+- `NABLA_POLICY_PATH` → `scan.policy_path`
+- `NABLA_RULEPACK_VERSION` → `scan.rulepack_version`
+- `NABLA_OUTPUT_PATH` → `output.path`
+- `NABLA_REDACT_PATHS` → `scan.redact_paths`
+- `NABLA_INCLUDE_HOST_INFO` → `scan.include_host_info`
+- `NABLA_INCLUDE_HEURISTICS` → `scan.include_heuristics`
+- `NABLA_STRINGS_LIMIT` → `scan.strings_limit`
+- `NABLA_ANALYSIS_TIMEOUT_MS` → `scan.timeout_ms`
+
+## Init command
+
+Scaffold a starter config for your repo.
+
+```bash
+# create ./.nabla/config.yaml (fails if exists)
+nabla init
+
+# choose a custom path
+nabla init --path ./configs/nabla.yaml
+
+# overwrite an existing file
+nabla init --force
+```
+
+Default template written by `nabla init`:
+
+```yaml filename=".nabla/config.yaml"
+scan:
+  min_level: warning
+  fail_on: warning
+  redact_paths: true
+  include_host_info: false
+  summary: markdown
+  summary_out: ./scan-results.md
+  include_heuristics: true
+  strings_limit: 5000
+  timeout_ms: 120000
+  policy_path: policies/scan.rhai
+  rulepack_version: 2025-09-18-1
+output:
+  path: ./scan-results.sarif
+```
+
+Next, review the reference for all keys and defaults.
+

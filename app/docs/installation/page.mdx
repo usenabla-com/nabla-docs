@@ -1,0 +1,59 @@
+---
+title: Installation
+description: Download signed Nabla binaries from cdn.usenabla.com.
+---
+
+import InstallCommand from '@/components/InstallCommand'
+
+# Install Nabla
+
+Download signed binaries directly from our CDN and pin the exact version you want. Use the tabs to choose a platform and the dropdown to choose a version — the command updates automatically.
+
+<InstallCommand />
+
+## Next steps
+
+- Make the binary executable and place it on your PATH: `chmod +x ./nabla && sudo mv ./nabla /usr/local/bin/`
+- Verify the install: `nabla --version`
+- Checksums, signatures, and package managers will be documented here soon.
+
+---
+
+## Verify signatures with Cosign
+
+Nabla binaries are signed. A detached signature file `nabla.sig` is published alongside each binary. Verify the binary before installing.
+
+### 1. Install Cosign
+
+- macOS: `brew install cosign`
+- Linux: use your package manager or see Sigstore docs.
+
+### 2. Download signature and public key
+
+Replace the platform and version to match what you downloaded from the tabs above.
+
+```bash
+# Example values — change to match your download
+VERSION=v1.1.0
+PLATFORM=nabla-macos-arm64   # or nabla-macos-amd64, nabla-linux-amd64
+
+# Download the signature that sits next to the binary
+curl -fL https://cdn.usenabla.com/${PLATFORM}-${VERSION}/nabla.sig -o nabla.sig
+
+# Download the trusted Cosign public key
+curl -fL https://cdn.usenabla.com/cosign.pub -o cosign.pub
+```
+
+### 3. Verify the signature
+
+```bash
+# Verify the downloaded binary using the detached signature and public key
+cosign verify-blob \
+  --key cosign.pub \
+  --signature nabla.sig \
+  nabla
+
+# Expected: output indicates verification success
+```
+
+If verification fails, do not run the binary. Re‑download and re‑verify, or contact support.

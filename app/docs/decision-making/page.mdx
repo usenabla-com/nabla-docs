@@ -1,0 +1,101 @@
+---
+title: Why Deterministic Rules (Not LLMs)
+description: Our decision to rely on a structured BinaryAnalysis model and Rhai rules for core evaluation.
+---
+
+# Our decision-making process: Why we went LLM-free (For now)
+
+We chose a deterministic, inspectable evaluation path built on a structured BinaryAnalysis model and Rhai scripting rules instead of an LLM‑driven core. The goal: reproducibility, auditability, and precise control over how evidence turns into outcomes.
+
+## Summary of the decision
+
+- Deterministic by design: Same inputs → same outputs, ideal for CI and audits.
+- Transparent and debuggable: Rules are small scripts tied to explicit fields.
+- Performant and offline‑friendly: No network calls, fast iteration at scale.
+- Safer by default: No prompt injection, no model drift, easier governance.
+
+## Inputs: BinaryAnalysis data model
+
+Rules evaluate a strongly‑typed record produced by our analyzers. This enables precise checks without heuristics.
+
+```rust
+#[derive(Debug, Serialize, Deserialize, Clone, Default, PartialEq)]
+pub struct BinaryAnalysis {
+    pub id: Uuid,
+    pub file_name: String,
+    pub format: String,
+    pub architecture: String,
+    pub languages: Vec<String>,
+    pub detected_technologies: Vec<String>,
+    pub detected_symbols: Vec<String>,
+    pub embedded_strings: Vec<String>,
+    pub suspected_secrets: Vec<String>,
+    pub imports: Vec<String>,
+    pub exports: Vec<String>,
+    pub hash_sha256: String,
+    pub hash_blake3: Option<String>,
+    pub size_bytes: u64,
+    pub linked_libraries: Vec<String>,
+    pub static_linked: bool,
+    pub version_info: Option<VersionInfo>,
+    pub license_info: Option<LicenseInfo>,
+    pub metadata: serde_json::Value,
+    pub created_at: DateTime<Utc>,
+}
+```
+
+Practical impact: rules can assert facts like “is statically linked?”, “contains banned symbols?”, “imports crypto without FIPS?”, or “has suspected secrets”, with no ambiguity.
+
+## Rules: Rhai scripting for precision
+
+Rhai provides a simple, sandboxed scripting surface. Each rule consumes a BinaryAnalysis and returns a pass/fail (with metadata) that maps to a control, then to a policy outcome.
+
+```rhai
+// Example: flag static linking without license metadata and secret indicators
+fn evaluate(analysis) {
+  let issues = [];
+
+  if analysis.static_linked && analysis.license_info == null {
+    issues.push("statically linked but missing license_info");
+  }
+
+  if analysis.suspected_secrets.len() > 0 {
+    issues.push(`suspected secrets: ${analysis.suspected_secrets.len()}`);
+  }
+
+  // Use simple symbol heuristics
+  if analysis.detected_symbols.contains("strcpy") {
+    issues.push("uses strcpy (unsafe)");
+  }
+
+  if issues.len() == 0 { return ok(); }
+  else { return violation("binary_hardening", issues); }
+}
+```
+
+Notes
+- Host provides helpers like ok()/violation(), severity, and tagging that the rule can return.
+- Option‑like fields appear as null in scripts; arrays expose len() and contains().
+
+## Why not an LLM for core evaluation?
+
+- Non‑determinism: Same input can lead to different outputs; hard to gate merges.
+- Governance risk: Prompt injection, context leakage, and model updates outside change control.
+- Audits and explainability: Hard to justify decisions line‑by‑line to auditors.
+- Cost/latency: Per‑evaluation API calls add variance and slow CI at scale.
+
+## Where LLMs still help
+
+- Narrative summarization of results for humans (post‑fact, not gating).
+- Remediation suggestions or triage assistants.
+- Drafting new rules that engineers then harden into Rhai.
+
+## Policy aggregation (how decisions roll up)
+
+- Rule → Control: Each rule emits a result mapped to a control requirement.
+- Control → Policy: Controls aggregate to policy status with clear precedence.
+- Exit behavior: Policies can enforce non‑zero exit codes to block merges/releases.
+
+<Callout type="info">
+Deterministic rules don’t preclude future ML: we want to keep the evaluation core stable while enabling optional AI‑assisted evaluation and false-positive filtering where appropriate.
+</Callout>

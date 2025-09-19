@@ -1,0 +1,62 @@
+---
+title: Limits
+description: Current limitations, constraints, and performance guidance.
+---
+
+# Limits
+
+This page outlines current limitations and how to work around them. We’ll expand this as features evolve.
+
+## Platforms & artifacts
+
+- Binaries: First‑class support for macOS, Linux, and Windows x64. Other architectures are planned.
+- Formats: Focused on common executable formats (Mach‑O, ELF, PE). Exotic/embedded formats may require custom analyzers.
+- Archives: Nested archives aren’t unpacked recursively by default; extract beforehand or integrate a pre‑step.
+
+## Analysis scope
+
+- Static analysis only: Runtime/dynamic behaviors aren’t observed unless provided as metadata.
+- Heuristics: Technology and language detection rely on symbols/strings; expect occasional false positives/negatives.
+- Secrets detection: Suspected secrets may include noise; tune allowlists and paths to reduce false positives.
+
+## Performance considerations
+
+- Large binaries: Very large files and rich symbol tables increase memory/CPU. Prefer analyzing release‑like builds without debug symbols when possible.
+- Repository size: Scanning many artifacts in CI benefits from concurrency limits and path filters.
+- Concurrency: Parallel workers are bounded; increasing beyond available cores may degrade performance.
+
+## Determinism & environment
+
+- Deterministic rules: Given the same `BinaryAnalysis` input, results are stable. Environment‑specific metadata (paths, timestamps) can change outcomes if rules reference them.
+- Offline runs: Core evaluation makes no network calls; integrations that publish results may require network access.
+
+## Rule engine (Rhai)
+
+- Sandbox: Rules execute in a constrained environment with limited host APIs.
+- Capabilities: Heavy compute or I/O in rules is intentionally disallowed; do preprocessing before evaluation.
+- Compatibility: Host‑exposed helpers are versioned; pin Nabla to keep rule behavior consistent across CI and local.
+
+## Policy aggregation
+
+- Precedence: Stricter controls take precedence where conflicts exist; mixed severities resolve to the highest severity.
+- Exit codes: Policy configuration governs non‑zero exits; misconfiguration can cause unexpected CI failures.
+
+## File handling
+
+- Symlinks: By default, symlinks aren’t followed outside the workspace for safety.
+- Path filters: Exclusions need to be explicit. Broad globs can unintentionally skip relevant artifacts.
+
+## Security model
+
+- Untrusted inputs: Treat scanned artifacts as untrusted. Nabla reads files but does not execute them.
+- Signatures: We publish a detached `nabla.sig` alongside each binary and a public key for Cosign verification; see Installation → Verify signatures.
+
+## Known gaps (planned)
+
+- Additional architectures (e.g., arm64 Linux musl, Windows ARM)
+- Deeper archive handling and container image scanning
+- Incremental scanning for monorepos and multi‑module builds
+
+<Callout type="info">
+If you hit a limitation that blocks your use case, open an issue with a minimal reproduction or reach out during your pilot. Many limits have straightforward workarounds (filters, preprocessing, or small helper rules).
+</Callout>

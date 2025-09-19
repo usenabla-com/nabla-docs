@@ -1,0 +1,130 @@
+---
+title: Outputs & Reporting
+description: SARIF schema, summaries, assessment JSON, and policy customization.
+---
+
+# Outputs & Reporting
+
+Nabla produces machine‑readable results for tooling and human‑readable summaries for quick review.
+
+## SARIF
+
+The primary machine format is SARIF (Static Analysis Results Interchange Format).
+
+What’s included
+- Tool metadata: name, version, and policy version used during evaluation
+- Rule registry: each rule’s id, description, default level, and help URI (anchors to docs)
+- Findings: locations (when available), levels (low/medium/high), and messages
+- Properties (per finding):
+  - remediation guidance and optional validation steps
+  - CWE (when applicable)
+  - evidence tier (observed vs heuristic)
+  - confidence score
+
+Minimal example
+```json
+{
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "nabla",
+          "version": "1.1.0",
+          "informationUri": "https://docs.usenabla.com",
+          "semanticVersion": "1.1.0"
+        }
+      },
+      "results": [
+        {
+          "ruleId": "weak_crypto_algorithms",
+          "level": "error",
+          "message": { "text": "Deprecated cryptography referenced (e.g., MD5/SHA1)." },
+          "properties": {
+            "remediation": "Replace with SHA‑256/512, AES‑GCM/ChaCha20‑Poly1305.",
+            "cwe": ["CWE-328"],
+            "evidence_tier": "observed",
+            "confidence": 0.92
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+Generate SARIF
+```bash
+nabla scan --file ./dist/app --output sarif > results.sarif
+```
+
+## Summaries
+
+Succinct, human‑readable reports for PRs, CI logs, and quick review.
+
+What’s included
+- Top risks summary (e.g., update/signing/secure boot, debug interfaces, network exposure)
+- Totals by level and category
+- Links to detailed rule docs
+
+Emit a markdown summary
+```bash
+nabla scan --file ./target/app --summary md > SUMMARY.md
+```
+
+## Assessment report (JSON)
+
+Evaluates mapped controls against evidence (via `nabla assess`).
+
+High‑level shape
+- `binary`: name, format, architecture, hashes, size
+- `implemented_controls[]`:
+  - `control_id`: string
+  - `framework`: string (e.g., `gsma-iot`)
+  - `title`: string
+  - `implementation_status`: `implemented` | `partially-implemented` | `not-applicable`
+  - `implementation_description`: string
+  - `evidence[]`: string[] (capped)
+  - `confidence_score`: number (0–1)
+
+Generate assessment JSON
+```bash
+nabla assess --file ./dist/app --framework gsma-iot --output assessment.json
+```
+
+---
+
+## Policy customization
+
+You can tailor both scanning and assessment policies.
+
+Files
+- `policies/scan.rhai`: governs rule behavior/severities and output properties
+- `policies/assess.rhai`: governs control assessment language and mapping
+
+Inputs available
+- `analysis`: the BinaryAnalysis input for a single artifact
+- `controls`: array of controls (for assessment)
+- `control`: the current control (in assess policy helpers)
+
+Common helpers (examples)
+- Regex matching helpers like `any_match`, `count_match`, and list utilities like `uniq`, `take`
+- Evidence capping: prefer `take(list, N)` to limit verbose outputs
+
+Performance guidance
+- Limit string scans (`--strings-limit`) and total evidence (top N items)
+- Use guards and early returns to keep rules fast
+
+Test custom policies
+```bash
+# Point scan at a local policy file via config
+nabla scan --file ./dist/app --config ./.nabla/config.yaml \
+  --summary md
+
+# Or override policy path in config (example key)
+# scan.policy_path: ./policies/scan.rhai
+
+# Run assessment with a custom assess policy
+nabla assess --file ./dist/app --framework all --output assessment.json
+```
+

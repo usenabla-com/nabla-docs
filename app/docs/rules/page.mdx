@@ -1,0 +1,244 @@
+---
+title: Rules
+description: Canonical reference for Nabla scan policy rules with stable anchors.
+---
+
+# Scan Policy Rules
+
+This page documents every rule with a stable anchor equal to its ruleId. Use these anchors for deep links from tooling and SARIF.
+
+<div className="mt-4 rounded-xl border border-neutral-200/60 dark:border-neutral-800 bg-white/60 dark:bg-neutral-900/40 p-4">
+  <div className="text-sm font-semibold text-neutral-600 dark:text-neutral-300">Quick navigation</div>
+  <div className="mt-2 flex flex-wrap gap-2 text-sm">
+    <a className="rounded-md border px-2 py-1 hover:bg-neutral-100 dark:hover:bg-neutral-800" href="#crypto_lib_present">crypto_lib_present</a>
+    <a className="rounded-md border px-2 py-1 hover:bg-neutral-100 dark:hover:bg-neutral-800" href="#weak_crypto_algorithms">weak_crypto_algorithms</a>
+    <a className="rounded-md border px-2 py-1 hover:bg-neutral-100 dark:hover:bg-neutral-800" href="#insecure_random">insecure_random</a>
+    <a className="rounded-md border px-2 py-1 hover:bg-neutral-100 dark:hover:bg-neutral-800" href="#network_indicators">network_indicators</a>
+    <a className="rounded-md border px-2 py-1 hover:bg-neutral-100 dark:hover:bg-neutral-800" href="#insecure_protocol_http">insecure_protocol_http</a>
+    <a className="rounded-md border px-2 py-1 hover:bg-neutral-100 dark:hover:bg-neutral-800" href="#telnet_present">telnet_present</a>
+    <a className="rounded-md border px-2 py-1 hover:bg-neutral-100 dark:hover:bg-neutral-800" href="#ftp_present">ftp_present</a>
+    <a className="rounded-md border px-2 py-1 hover:bg-neutral-100 dark:hover:bg-neutral-800" href="#suspected_secrets">suspected_secrets</a>
+    <a className="rounded-md border px-2 py-1 hover:bg-neutral-100 dark:hover:bg-neutral-800" href="#signed_update_support">signed_update_support</a>
+    <a className="rounded-md border px-2 py-1 hover:bg-neutral-100 dark:hover:bg-neutral-800" href="#insecure_update_mechanism">insecure_update_mechanism</a>
+    <a className="rounded-md border px-2 py-1 hover:bg-neutral-100 dark:hover:bg-neutral-800" href="#writable_executable_section">writable_executable_section</a>
+    <a className="rounded-md border px-2 py-1 hover:bg-neutral-100 dark:hover:bg-neutral-800" href="#stack_protector_enabled">stack_protector_enabled</a>
+    <a className="rounded-md border px-2 py-1 hover:bg-neutral-100 dark:hover:bg-neutral-800" href="#stack_protector_missing">stack_protector_missing</a>
+    <a className="rounded-md border px-2 py-1 hover:bg-neutral-100 dark:hover:bg-neutral-800" href="#secure_boot_present">secure_boot_present</a>
+    <a className="rounded-md border px-2 py-1 hover:bg-neutral-100 dark:hover:bg-neutral-800" href="#secure_boot_missing_evidence">secure_boot_missing_evidence</a>
+    <a className="rounded-md border px-2 py-1 hover:bg-neutral-100 dark:hover:bg-neutral-800" href="#flash_encryption_likely">flash_encryption_likely</a>
+    <a className="rounded-md border px-2 py-1 hover:bg-neutral-100 dark:hover:bg-neutral-800" href="#debug_interfaces_enabled">debug_interfaces_enabled</a>
+  </div>
+</div>
+
+<div className="h-2" />
+
+## Crypto libraries
+
+<h3 id="crypto_lib_present">crypto_lib_present</h3>
+<div className="flex flex-wrap items-center gap-2 text-xs">
+  <span className="rounded-full border px-2 py-0.5">Severity: <span className="font-semibold text-emerald-700 dark:text-emerald-400">low</span></span>
+  <span className="rounded-full border px-2 py-0.5">Category: Crypto</span>
+</div>
+
+- What it means: The binary appears to include a cryptographic library (e.g., OpenSSL, mbedTLS, wolfSSL, BoringSSL).
+- Why it matters: Helpful context for other crypto/hardening findings; not an issue by itself.
+- Evidence you'll see: Library names or technology indicators in the report.
+- How to fix: No action required. Use alongside weak‑crypto and transport‑security findings.
+
+## Weak crypto algorithms
+
+<h3 id="weak_crypto_algorithms">weak_crypto_algorithms</h3>
+<div className="flex flex-wrap items-center gap-2 text-xs">
+  <span className="rounded-full border px-2 py-0.5">Severity: <span className="font-semibold text-amber-700 dark:text-amber-400">medium</span></span>
+  <span className="rounded-full border px-2 py-0.5">Category: Crypto</span>
+</div>
+
+- What it means: The binary references weak or deprecated cryptography (e.g., MD5, SHA‑1, RC4, DES, ECB mode).
+- Why it matters: These primitives are vulnerable and can undermine authentication, integrity, or confidentiality.
+- Evidence you'll see: Algorithm names or cipher/mode identifiers.
+- How to fix: Replace with modern primitives (SHA‑256/512, AES‑GCM or ChaCha20‑Poly1305, Ed25519/ECDSA‑P256). Remove compatibility fallbacks.
+
+## Insecure randomness
+
+<h3 id="insecure_random">insecure_random</h3>
+<div className="flex flex-wrap items-center gap-2 text-xs">
+  <span className="rounded-full border px-2 py-0.5">Severity: <span className="font-semibold text-amber-700 dark:text-amber-400">medium</span></span>
+  <span className="rounded-full border px-2 py-0.5">Category: Crypto</span>
+</div>
+
+- What it means: Non‑cryptographic random sources appear to be used without a secure alternative.
+- Why it matters: Weak randomness can break keys, tokens, and nonces.
+- Evidence you'll see: References to APIs like rand/srand/GetTickCount/time without secure RNGs nearby.
+- How to fix: Use a CSPRNG (getrandom/arc4random/libsodium randombytes/CTR_DRBG). Ensure all security‑sensitive randomness comes from a CSPRNG.
+
+## Network indicators (grouped)
+
+<h3 id="network_indicators">network_indicators</h3>
+<div className="flex flex-wrap items-center gap-2 text-xs">
+  <span className="rounded-full border px-2 py-0.5">Severity: <span className="font-semibold text-emerald-700 dark:text-emerald-400">low</span> → <span className="font-semibold text-amber-700 dark:text-amber-400">medium</span> (HTTP)</span>
+  <span className="rounded-full border px-2 py-0.5">Category: Networking</span>
+</div>
+
+- What it means: The binary shows signs of networking (HTTP(S) URLs, MQTT/CoAP markers, socket usage).
+- Why it matters: Context for transport security and exposure; not always a problem on its own.
+- Evidence you'll see: Counts of URLs/protocols and common socket calls.
+- How severity is chosen: Low by default; increases to medium if plaintext HTTP is present.
+- How to fix: Prefer HTTPS/TLS; review protocol usage; restrict network access where possible.
+
+## Insecure protocols
+
+<h3 id="insecure_protocol_http">insecure_protocol_http</h3>
+<div className="flex flex-wrap items-center gap-2 text-xs">
+  <span className="rounded-full border px-2 py-0.5">Severity: <span className="font-semibold text-amber-700 dark:text-amber-400">medium</span></span>
+  <span className="rounded-full border px-2 py-0.5">Category: Networking</span>
+</div>
+
+- What it means: Plaintext HTTP endpoints were found.
+- Why it matters: Unencrypted traffic exposes data and invites interception/tampering.
+- Evidence you'll see: One or more `http://` endpoints in findings.
+- How to fix: Replace with HTTPS, enforce TLS verification, remove plaintext fallbacks.
+
+<h3 id="telnet_present">telnet_present</h3>
+<div className="flex flex-wrap items-center gap-2 text-xs">
+  <span className="rounded-full border px-2 py-0.5">Severity: <span className="font-semibold text-rose-700 dark:text-rose-400">high</span></span>
+  <span className="rounded-full border px-2 py-0.5">Category: Networking</span>
+</div>
+
+- What it means: Telnet/Telnetd usage is indicated.
+- Why it matters: Telnet is unencrypted and frequently targeted.
+- Evidence you'll see: Strings like “telnet”, “telnetd”, and login prompts.
+- How to fix: Remove Telnet; use SSH or secure management channels.
+
+<h3 id="ftp_present">ftp_present</h3>
+<div className="flex flex-wrap items-center gap-2 text-xs">
+  <span className="rounded-full border px-2 py-0.5">Severity: <span className="font-semibold text-rose-700 dark:text-rose-400">high</span></span>
+  <span className="rounded-full border px-2 py-0.5">Category: Networking</span>
+</div>
+
+- What it means: FTP client/server indicators are present.
+- Why it matters: FTP is plaintext and susceptible to credential theft/mitm.
+- Evidence you'll see: “ftp://”, “ftpd”, or command strings.
+- How to fix: Replace with HTTPS/SFTP; disable legacy services.
+
+## Secrets detection (strong patterns)
+
+<h3 id="suspected_secrets">suspected_secrets</h3>
+<div className="flex flex-wrap items-center gap-2 text-xs">
+  <span className="rounded-full border px-2 py-0.5">Severity: <span className="font-semibold text-rose-700 dark:text-rose-400">high</span> (scaled by count)</span>
+  <span className="rounded-full border px-2 py-0.5">Category: Secrets</span>
+</div>
+
+- What it means: Embedded secrets or strong secret patterns were found (e.g., PEM private keys, AWS AKIA IDs).
+- Why it matters: Secrets in binaries can be extracted and abused at scale.
+- Evidence you'll see: A count of suspected secrets and examples (truncated) when safe.
+- How severity is chosen: Scales with count and sensitivity of patterns.
+- How to fix: Remove secrets; use a secrets manager; inject at runtime; rotate leaked credentials.
+
+## Update/OTA and signature verification
+
+<h3 id="signed_update_support">signed_update_support</h3>
+<div className="flex flex-wrap items-center gap-2 text-xs">
+  <span className="rounded-full border px-2 py-0.5">Severity: <span className="font-semibold text-emerald-700 dark:text-emerald-400">low</span></span>
+  <span className="rounded-full border px-2 py-0.5">Category: Updates</span>
+</div>
+
+- What it means: Update/OTA flow appears to verify signatures.
+- Why it matters: Signed updates prevent malicious firmware/application injection.
+- Evidence you'll see: Mentions of signature verification symbols/strings.
+- How to fix: Ensure verification is mandatory, failures are fatal, and keys are protected.
+
+<h3 id="insecure_update_mechanism">insecure_update_mechanism</h3>
+<div className="flex flex-wrap items-center gap-2 text-xs">
+  <span className="rounded-full border px-2 py-0.5">Severity: <span className="font-semibold text-amber-700 dark:text-amber-400">warning</span></span>
+  <span className="rounded-full border px-2 py-0.5">Category: Updates</span>
+</div>
+
+- What it means: Update/OTA logic is indicated without clear signature verification.
+- Why it matters: Unsigned updates allow unauthorized or malicious code to be installed.
+- Evidence you'll see: Update/OTA references without corresponding verification evidence.
+- How to fix: Enforce signed updates, verify before apply, add rollback protection.
+
+## Memory protections
+
+<h3 id="writable_executable_section">writable_executable_section</h3>
+<div className="flex flex-wrap items-center gap-2 text-xs">
+  <span className="rounded-full border px-2 py-0.5">Severity: <span className="font-semibold text-rose-700 dark:text-rose-400">high</span></span>
+  <span className="rounded-full border px-2 py-0.5">Category: Hardening</span>
+</div>
+
+- What it means: The binary appears to contain sections that are both writable and executable (W^X violation).
+- Why it matters: W^X increases risk of code‑injection and exploitation.
+- Evidence you'll see: Section names/flags indicating both write and execute permissions.
+- How to fix: Enforce W^X; enable RELRO/PIE; audit linker and build flags.
+
+<h3 id="stack_protector_enabled">stack_protector_enabled</h3>
+<div className="flex flex-wrap items-center gap-2 text-xs">
+  <span className="rounded-full border px-2 py-0.5">Severity: <span className="font-semibold text-emerald-700 dark:text-emerald-400">low</span></span>
+  <span className="rounded-full border px-2 py-0.5">Category: Hardening</span>
+</div>
+
+- What it means: Stack protection appears enabled (evidence like `__stack_chk_fail`).
+- Why it matters: Stack canaries reduce impact of buffer overflows.
+- Evidence you'll see: Hardening symbol(s) present.
+- How to fix: Ensure stack protector is enabled consistently across all modules.
+
+<h3 id="stack_protector_missing">stack_protector_missing</h3>
+<div className="flex flex-wrap items-center gap-2 text-xs">
+  <span className="rounded-full border px-2 py-0.5">Severity: <span className="font-semibold text-emerald-700 dark:text-emerald-400">low</span> (heuristic)</span>
+  <span className="rounded-full border px-2 py-0.5">Category: Hardening</span>
+</div>
+
+- What it means: No evidence of stack protector.
+- Why it matters: Missing canaries increase risk from memory‑safety bugs.
+- Evidence you'll see: Absence of common hardening symbols.
+- How to fix: Compile with `-fstack-protector-strong` or equivalent; confirm across modules.
+
+## Secure boot indicators
+
+<h3 id="secure_boot_present">secure_boot_present</h3>
+<div className="flex flex-wrap items-center gap-2 text-xs">
+  <span className="rounded-full border px-2 py-0.5">Severity: <span className="font-semibold text-emerald-700 dark:text-emerald-400">low</span></span>
+  <span className="rounded-full border px-2 py-0.5">Category: Boot</span>
+</div>
+
+- What it means: Evidence suggests secure/verified boot is implemented.
+- Why it matters: Prevents execution of untrusted boot code.
+- Evidence you'll see: References to signature verification in the boot path.
+- How to fix: Ensure keys are protected, versions/counters enforced, and failures stop boot.
+
+<h3 id="secure_boot_missing_evidence">secure_boot_missing_evidence</h3>
+<div className="flex flex-wrap items-center gap-2 text-xs">
+  <span className="rounded-full border px-2 py-0.5">Severity: <span className="font-semibold text-amber-700 dark:text-amber-400">warning</span> (heuristic)</span>
+  <span className="rounded-full border px-2 py-0.5">Category: Boot</span>
+</div>
+
+- What it means: No clear evidence of secure boot where we’d expect it.
+- Why it matters: Boot sequence may allow untrusted code.
+- Evidence you'll see: Boot‑related indicators without verification references.
+- How to fix: Add immutable root‑of‑trust verification before executing loaded code; protect keys and enforce failures.
+
+## Flash encryption likelihood (ESP‑IDF specific)
+
+<h3 id="flash_encryption_likely">flash_encryption_likely</h3>
+<div className="flex flex-wrap items-center gap-2 text-xs">
+  <span className="rounded-full border px-2 py-0.5">Severity: <span className="font-semibold text-emerald-700 dark:text-emerald-400">low</span> (inferred)</span>
+  <span className="rounded-full border px-2 py-0.5">Category: Storage</span>
+</div>
+
+- What it means: Likely evidence of flash/storage encryption (not definitive).
+- Why it matters: Encrypting stored data mitigates extraction/forensics risks.
+- Evidence you'll see: Partition/flash terms with crypto libraries or AES references.
+- How to fix: Validate key management, key storage, and the threat model.
+
+## Debug interfaces
+
+<h3 id="debug_interfaces_enabled">debug_interfaces_enabled</h3>
+<div className="flex flex-wrap items-center gap-2 text-xs">
+  <span className="rounded-full border px-2 py-0.5">Severity: <span className="font-semibold text-emerald-700 dark:text-emerald-400">low</span> → <span className="font-semibold text-amber-700 dark:text-amber-400">warning</span> (multiple indicators)</span>
+  <span className="rounded-full border px-2 py-0.5">Category: Debug</span>
+</div>
+
+- What it means: Indicators suggest debug interfaces (JTAG/SWD/UART) may be enabled.
+- Why it matters: Debug ports can bypass security if exposed in production.
+- Evidence you'll see: References to JTAG/SWD/UART or debug consoles.
+- How to fix: Disable/lock debug in production; require authentication; remove debug consoles.

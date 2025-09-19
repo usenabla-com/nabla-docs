@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Light mode removed: always use dark variables */
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Docusaurus-like announcement banner */
+.docusaurus-banner {
+  /* Diagonal pastel stripes (match Docusaurus look) */
+  background: repeating-linear-gradient(
+    -45deg,
+    #f6e8ff 0 24px,
+    #ffe8cc 24px 48px
+  );
+  color: #111;
+  font-weight: 600;
+  letter-spacing: .2px;
+  border-bottom: 1px solid rgba(0,0,0,.08);
+}
+/* Keep the same colors even in dark mode */
+.dark .docusaurus-banner {
+  background: repeating-linear-gradient(
+    -45deg,
+    #f6e8ff 0 24px,
+    #ffe8cc 24px 48px
+  );
+  color: #111;
+}
+.docusaurus-banner a {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  padding: 10px 16px;
+}
+.docusaurus-gradient-text {
+  background: linear-gradient(90deg, #9b5cff, #ff4d4d, #ffb000);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

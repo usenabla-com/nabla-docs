@@ -1,0 +1,102 @@
+---
+title: Glossary
+description: Definitions for key terms used across Nabla CLI, rules, policies, and reports.
+---
+
+# Glossary
+
+This glossary clarifies the terms you’ll see in the CLI, outputs, and policy assessments.
+
+### Artifact
+An input to analysis. Can be a single binary, an archive, or a directory containing binaries and related files.
+
+### Assessment
+High‑level evaluation of mapped controls against observed evidence. Produced by `nabla assess` as JSON (see Outputs & Reporting → Assessment report).
+
+### BinaryAnalysis
+The structured record Nabla builds for each analyzed artifact (format, arch, symbols, strings, libraries, hashes, sections, metadata). Rules and assessments consume this to produce findings and control statuses.
+
+### Confidence (score)
+A numeric indicator (0–1) expressing confidence in an assessment outcome or finding, based on signal quality and corroboration. Not a direct measure of business risk.
+
+### Config (configuration)
+YAML settings that control scanning and policy behavior. Default path: `./.nabla/config.yaml`. CLI flags override config values.
+
+### Control
+An actionable requirement that maps one or more rules to a governance objective. Controls roll up to policies and receive an implementation status in assessments.
+
+### Control status
+Implementation outcome for a control during assessment: `implemented`, `partially-implemented`, or `not-applicable`.
+
+### CWE
+Common Weakness Enumeration identifiers attached to relevant findings in SARIF.
+
+### CSPRNG
+Cryptographically secure pseudorandom number generator (e.g., `getrandom`, `arc4random`, CTR_DRBG). Prefer for keys/tokens/nonces.
+
+### Evidence
+Signals observed during analysis (e.g., symbols, strings, libraries, section flags). Summarized and capped in outputs to keep reports readable.
+
+### Evidence tier
+Qualifies a finding’s basis: `observed` (direct evidence) or `heuristic` (inferred patterns). Heuristic items can be excluded with `--exclude-heuristics`.
+
+### Finding
+An individual rule result (e.g., “weak_crypto_algorithms”) with a level, message, properties, and optional locations in SARIF.
+
+### Framework
+A compliance or best‑practice standard that policies tailor messaging to (e.g., GSMA IoT, ETSI EN 303 645, FIPS 140‑3, NIST SP 800‑53/800‑193, FDA Premarket).
+
+### Heuristic
+Inference‑based signal that suggests a condition (e.g., likely flash encryption). Marked as heuristic in outputs; can be filtered out.
+
+### Help URI
+Link from a rule to its documentation (e.g., `/docs/rules#weak_crypto_algorithms`). Appears in SARIF rule registry and in findings.
+
+### Level (severity)
+Finding importance used for filtering and exit behavior. Levels: `low`, `medium`, `high`.
+
+### Minimum level (`--min-level`)
+Output filter that hides findings below a given level without changing evaluation (useful for concise reports).
+
+### Policy
+Collection of controls aligned to a governance objective or framework. Policies determine how individual findings roll up to an outcome.
+
+### Redaction
+Removes sensitive local paths or details from output. Enable with `--redact-paths` for shareable CI logs.
+
+### Remediation
+Actionable guidance attached to a finding describing how to resolve the issue.
+
+### Rule
+Deterministic check that inspects BinaryAnalysis and emits a finding (with severity, message, and properties). See Rules for the registry and details.
+
+### SARIF
+Static Analysis Results Interchange Format (JSON) for tool‑agnostic reporting. Nabla emits SARIF via `--output sarif`.
+
+### SBOM
+Software Bill of Materials. Nabla can generate CycloneDX SBOMs with `nabla sbom --from <path|url>`.
+
+### Signed update
+An update mechanism that verifies signatures before applying code or firmware. Related to the `signed_update_support` rule and update policies.
+
+### Secure boot
+Boot process that verifies code before execution using a root of trust. Related to `secure_boot_present` and policy assessments for authenticity.
+
+### Strings limit (`--strings-limit`)
+Caps how many embedded strings are collected per file to control performance and output size.
+
+### Summary report
+Human‑readable overview (Markdown recommended) showing top risks, counts, and links to rule docs. Enable with `--summary md`.
+
+### Timeout (`--timeout-ms`)
+Per‑file analysis time budget in milliseconds. Helps bound worst‑case processing.
+
+### TLS
+Transport Layer Security. Prefer HTTPS/TLS over plaintext protocols (see `insecure_protocol_http`).
+
+### W^X
+Writable‑xor‑Executable memory policy. Findings like `writable_executable_section` indicate sections that are both writable and executable.
+
+### Work concurrency (`--concurrency`)
+Maximum parallel workers used during analysis.
+

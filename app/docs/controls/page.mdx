@@ -1,0 +1,182 @@
+---
+title: Controls
+description: How Nabla assesses controls against evidence, plus policy areas and framework tailoring.
+---
+
+# Controls Assessment
+
+Nabla maps your controls to observable signals from binaries and metadata, producing explainable outcomes you can trust in CI and audits.
+
+<Callout>
+Deterministic, audit‑friendly assessments with clear status levels:
+
+- Implemented — strong evidence supports the control’s intent
+- Partially‑implemented — evidence exists, but gaps or risks remain
+- Not‑applicable — control doesn’t apply based on observed scope
+</Callout>
+
+## Evidence sources (what we look at)
+
+- Linked libraries and detected symbols (e.g., crypto primitives, TLS contexts, hardening functions)
+- Embedded strings and metadata (e.g., URLs, protocols, boot/OTA indicators, credentials)
+- Section flags and format‑specific hints (e.g., W^X, Mach‑O code signing references)
+- Derived facts built from the above (e.g., “has TLS”, “insecure protocol present”, “signed updates likely”)
+
+---
+
+## Policy Areas
+
+<Cards num={3}>
+  <a href="#cryptography-confidentiality" title="Cryptography & Confidentiality">Cryptography & Confidentiality</a>
+  <a href="#key-management-secrets" title="Key Management & Secrets">Key Management & Secrets</a>
+  <a href="#transport-security" title="Transport Security">Transport Security</a>
+  <a href="#firmware-update-signing" title="Firmware Update & Signing">Firmware Update & Signing</a>
+  <a href="#integrity-hash-vs-crc" title="Integrity (Hash vs CRC)">Integrity (Hash vs CRC)</a>
+  <a href="#authentication" title="Authentication">Authentication</a>
+  <a href="#password-policy" title="Password Policy">Password Policy</a>
+  <a href="#authorization-least-privilege" title="Authorization & Least Privilege">Authorization & Least Privilege</a>
+  <a href="#session-management-timeouts" title="Session Management & Timeouts">Session Management & Timeouts</a>
+  <a href="#anti-replay-protections" title="Anti‑Replay Protections">Anti‑Replay Protections</a>
+  <a href="#rollback-recovery" title="Rollback & Recovery">Rollback & Recovery</a>
+  <a href="#debug-interfaces" title="Debug Interfaces">Debug Interfaces</a>
+  <a href="#static-linking" title="Static Linking">Static Linking</a>
+  <a href="#logging-audit" title="Logging & Audit">Logging & Audit</a>
+  <a href="#platform-specific-hints" title="Platform‑Specific Hints">Platform‑Specific Hints</a>
+</Cards>
+
+### Cryptography & Confidentiality
+
+- What we look for: Presence of cryptographic libraries/primitives; weak algorithms flagged separately; TLS contexts.
+- How we assess: Implemented when modern crypto libraries/symbols are present; partially‑implemented if weak algorithms are also observed.
+- Evidence examples: OpenSSL/mbedTLS/wolfSSL/BoringSSL; AES/SHA/Ed25519/RSA symbols; TLS indicators.
+- Related rules: `crypto_lib_present`, `weak_crypto_algorithms`.
+
+### Key Management & Secrets
+
+- What we look for: Embedded secrets or strong patterns (PEM keys, AWS AKIA IDs); overall suspected secrets count.
+- How we assess: Implemented when no embedded secrets are observed; partially‑implemented if any likely secrets are present.
+- Evidence examples: “BEGIN PRIVATE KEY”, “AKIA…”, analyzer suspected_secrets list.
+- Related rules: `suspected_secrets`.
+
+### Transport Security
+
+- What we look for: Network indicators, TLS usage, and insecure protocols (HTTP, Telnet, FTP).
+- How we assess: Implemented when TLS contexts exist without insecure protocols; partially‑implemented if HTTP/Telnet/FTP are present.
+- Evidence examples: http(s) URLs, MQTT/CoAP markers, SSL/TLS symbols, libssl usage.
+- Related rules: `network_indicators`, `insecure_protocol_http`, `telnet_present`, `ftp_present`.
+
+### Firmware Update & Signing
+
+- What we look for: OTA/update indicators and signature verification in update or boot paths; secure boot references.
+- How we assess: Implemented when update/boot flows include signature verification; partially‑implemented when updates lack verification evidence.
+- Evidence examples: “firmware update”, DFU/U‑Boot/bootloader strings; verify_signature symbols; “secure/verified boot”.
+- Related rules: `signed_update_support`, `insecure_update_mechanism`, `secure_boot_present`, `secure_boot_missing_evidence`.
+
+### Integrity (Hash vs CRC)
+
+- What we look for: Cryptographic hashes/MACs versus non‑cryptographic CRC/checksum usage.
+- How we assess: Implemented when cryptographic hashing/MAC indicators are present; partially‑implemented when only CRC/checksum is seen.
+- Evidence examples: SHA‑256/384/512, BLAKE3, HMAC/CMAC vs CRC16/32 references.
+
+### Authentication
+
+- What we look for: Authentication routines and primitives (auth/login/password/token).
+- How we assess: Implemented when authentication indications are present; confidence increases with modern crypto present.
+- Evidence examples: “auth”, “authenticate”, “token”, PAM references.
+
+### Password Policy
+
+- What we look for: Secure password hashing and policy enforcement (argon2/bcrypt/scrypt/PBKDF2, pwquality, lockout).
+- How we assess: Implemented when secure hashing/policy indicators exist; partially‑implemented when auth exists without clear policy.
+- Evidence examples: “argon2”, “bcrypt”, “PBKDF2”, “lockout”, “pwquality”.
+
+### Authorization & Least Privilege
+
+- What we look for: RBAC/ACL/permission indicators, sandboxing hints (SELinux/seccomp/capabilities).
+- How we assess: Implemented when authorization/RBAC indicators are present.
+- Evidence examples: “rbac”, “acl”, “permission”, “selinux”, “seccomp”.
+
+### Session Management & Timeouts
+
+- What we look for: Timeouts, idle/session management, lockouts, expiry/backoff.
+- How we assess: Implemented when timeout/lockout/session indicators exist.
+- Evidence examples: “timeout”, “idle”, “lockout”, “expiry”, “backoff”.
+
+### Anti‑Replay Protections
+
+- What we look for: Nonce/sequence/timestamp/window usage in protocols.
+- How we assess: Implemented when anti‑replay indicators are present.
+- Evidence examples: “nonce”, “anti‑replay”, “sequence”, “timestamp”.
+
+### Rollback & Recovery
+
+- What we look for: Anti‑rollback/version counters and recovery/factory reset paths.
+- How we assess: Implemented when rollback protection or recovery provisions are present; partially‑implemented if updates exist without rollback.
+- Evidence examples: “rollback”, “version counter”, “factory reset”, “recovery”.
+
+### Debug Interfaces
+
+- What we look for: JTAG/SWD/UART indicators and serial console references.
+- How we assess: Partially‑implemented when debug indicators are present; implemented when none are observed (static view).
+- Evidence examples: “JTAG”, “SWD”, “UART”, “tty…”, “115200”, “serial console”.
+
+### Static Linking
+
+- What we look for: Whether the binary is statically linked.
+- How we assess: Implemented when static linking is detected for controls that require it; not‑applicable if your control does not cover static linking.
+- Evidence examples: Static linking flag in analysis.
+
+### Logging & Audit
+
+- What we look for: Logging/audit/tracing indicators.
+- How we assess: Implemented when logging/audit routines are present.
+- Evidence examples: “log”, “syslog”, “audit”, “trace”, “event”.
+
+### Platform‑Specific Hints
+
+- macOS (Mach‑O): Code signing references (LC_CODE_SIGNATURE, SecCode/SecPolicy) may appear as hints.
+- TLS contexts: Library and symbol hints for TLS versions, ALPN/SNI, STARTTLS, and SSL_CTX usage.
+
+---
+
+## Framework Tailoring
+
+Nabla adapts assessment language and emphasis to the selected framework. These examples show how messages align to familiar terminology.
+
+### GSMA IoT
+
+- Focus areas: APDU/UICC (ISO 7816), hardware root of trust hints.
+- Evidence examples: “apdu”, “7816”, “select/get response/ATR”, “secure element/TPM/PUF”.
+- Outcome: Controls referencing APDU/UICC or HBRT are marked implemented when indicators are present; otherwise not‑applicable.
+
+### ETSI EN 303 645
+
+- Focus areas: Default/weak passwords, best practice cryptography.
+- Evidence examples: “admin:admin”, “root:root”, “password123”, approved crypto libraries.
+- Outcome: Policies about unique/secure passwords are flagged when weak defaults appear; crypto best‑practice messaging highlights approved libraries.
+
+### FIPS 140‑3
+
+- Focus areas: Module interfaces and self‑tests; CMVP/NIST references.
+- Evidence examples: “FIPS”, “CMVP”, “self test”, integrity/self‑test symbols.
+- Outcome: Controls referencing FIPS modules/self‑tests are marked implemented when indicators are present.
+
+### NIST SP 800‑193 (PFR)
+
+- Focus areas: Secure/verified boot, recovery, rollback.
+- Evidence examples: “secure boot”, “verified boot”, “chain of trust”, recovery/factory reset strings.
+- Outcome: Boot authenticity and recovery controls reflect presence of signature verification and recovery paths.
+
+### NIST SP 800‑53 Rev. 5
+
+- Focus areas: Logging/audit, access control/authorization.
+- Evidence examples: syslog/audit/logger; RBAC/ACL/permissions.
+- Outcome: AU/AC families align to logging and authorization evidence where applicable.
+
+### FDA Premarket
+
+- Focus areas: Software composition analysis (SCA) and third‑party components.
+- Evidence examples: Linked libraries and detected technologies.
+- Outcome: SCA‑related controls highlight component presence; gaps flagged when none are discovered.
+
+<Callout type="info">Don’t see your framework? Policies are customizable. Tailor control statements and we’ll map them to available evidence.</Callout>

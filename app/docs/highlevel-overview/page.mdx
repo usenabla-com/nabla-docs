@@ -1,0 +1,44 @@
+---
+title: High‑Level Overview
+description: A concise tour of Nabla’s architecture, concepts, and flow.
+---
+
+# Architecture Overview
+
+Nabla helps teams ship safer software by evaluating code and configuration against policy. At a glance: define rules, group them into controls and policies, run evaluations locally or in CI, and publish actionable outputs.
+
+## Core concepts
+
+- Rules: Atomic checks that evaluate facts (code, config, metadata).
+- Controls: Practical requirements implemented by one or more rules.
+- Policies: Collections of controls aligned to standards or goals.
+- Configuration: Sources, scopes, exclusions, and parameters for runs.
+- Outputs: Human and machine‑readable results for developers and auditors.
+
+## Primary components
+
+- CLI runtime: Local dev and CI entrypoint; orchestrates evaluations.
+- Rules engine: Executes rules deterministically and aggregates findings.
+- Policy mapper: Resolves which controls/rules to apply for a run.
+- Integrations: Source inputs and publish outputs (SCM, CI, ticketing, SIEM).
+- Reporting: Summaries, SARIF, JSON, and artifacts for audit trails.
+
+## End‑to‑end flow
+
+1) Discover inputs: Repo, IaC, build metadata, or supplied artifacts.
+2) Resolve policy: Map selected policy to controls and rules for scope.
+3) Execute rules: Evaluate checks with the configured parameters/guardrails.
+4) Aggregate results: Normalize severities, owners, and remediation hints.
+5) Enforce: Return non‑zero on violations when configured; gate merges/releases.
+6) Publish outputs: Write reports locally and/or forward to integrations.
+
+## Deployment patterns
+
+- Local: Developers run the CLI for fast feedback during changes.
+- CI/CD: Required checks block merges or releases based on policy.
+- Scheduled: Periodic scans for drift detection and compliance evidence.
+
+## Security in brief
+
+- Least‑privilege inputs; no unexpected network calls during evaluation.
+- Reproducible runs with pinned versions and signed binaries.

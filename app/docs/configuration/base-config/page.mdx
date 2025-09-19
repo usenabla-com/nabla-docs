@@ -1,0 +1,28 @@
+---
+title: Base config.yaml
+description: Starter configuration written by `nabla init`.
+---
+
+# Base config.yaml
+
+This is the config template that `nabla init` writes. It’s a solid starting point for local runs and CI.
+
+```yaml filename=".nabla/config.yaml"
+scan:
+  min_level: warning           # filter threshold for outputs (note|warning|error)
+  fail_on: warning             # CI failure threshold (none|note|warning|error)
+  redact_paths: true           # redact local paths in evidence
+  include_host_info: false     # include OS/arch in SARIF tool invocation
+  summary: markdown            # human summary format (markdown recommended)
+  summary_out: ./scan-results.md
+  include_heuristics: true     # include heuristic findings
+  strings_limit: 5000          # cap collected strings per file
+  timeout_ms: 120000           # per-file analysis timeout (0 disables)
+  policy_path: policies/scan.rhai
+  rulepack_version: 2025-09-18-1
+output:
+  path: ./scan-results.sarif   # default SARIF output path
+```
+
+<Callout type="info">Place this file at <code>./.nabla/config.yaml</code> in your repo. Use <code>--config &lt;path&gt;</code> for alternates. CLI flags always override config values.</Callout>
+

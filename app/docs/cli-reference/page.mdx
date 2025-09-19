@@ -1,0 +1,126 @@
+---
+title: CLI Reference
+description: Commands, flags, exit behavior, and examples for the Nabla CLI.
+---
+
+# CLI Reference
+
+Use Nabla from your terminal and CI to scan binaries, generate SBOMs, and assess policies.
+
+<Callout type="info">Global flag: use <code>--debug</code> on any command to enable verbose logging.</Callout>
+
+## Commands
+
+### version
+
+Prints the semantic version.
+
+```bash
+nabla version
+```
+
+### init
+
+Generates a starter YAML configuration.
+
+```bash
+nabla init [--path <file>] [--force]
+```
+
+- Default path: `./.nabla/config.yaml`
+- `--force`: overwrite if the file already exists
+
+### scan
+
+Scans a binary, directory, or archive and emits findings and reports.
+
+```bash
+nabla scan --file <path> \
+  [--output <sarif>] \
+  [--config <yaml>] \
+  [--summary <fmt>] [--summary-out <file>] \
+  [--fail-on <level>] [--min-level <level>] \
+  [--exclude-heuristics] [--redact-paths] [--include-host-info] \
+  [--strings-limit <n>] [--timeout-ms <n>] [--concurrency <n>]
+```
+
+Flags
+- `--file <path>`: Input path (binary, directory, or archive). Required.
+- `--output <sarif>`: Write SARIF to stdout (or to file when you redirect). Default: none.
+- `--config <yaml>`: Path to config file; overrides default discovery (`./.nabla/config.yaml`).
+- `--summary <fmt>`: Emit a human summary to stdout. Formats: `md` (markdown) recommended.
+- `--summary-out <file>`: Write the summary to a file (pairs with `--summary`).
+- `--fail-on <level>`: Exit non‑zero when any finding at or above level is present. Levels: `none`, `low`, `medium`, `high`.
+- `--min-level <level>`: Filter out findings below this level from outputs (does not change evaluation).
+- `--exclude-heuristics`: Omit heuristic findings (keeps only “observed/strong” evidence types).
+- `--redact-paths`: Redact local filesystem paths from output (useful for CI logs and sharing).
+- `--include-host-info`: Add host metadata (OS, arch) to output for troubleshooting.
+- `--strings-limit <n>`: Cap embedded string collection per file (performance control).
+- `--timeout-ms <n>`: Per‑file timeout budget in milliseconds.
+- `--concurrency <n>`: Max workers for parallel analysis.
+
+Precedence & behavior
+- Config file values are loaded first; CLI flags override config.
+- `--min-level` filters report output only; it does not suppress evaluation.
+- Exit code policy is controlled by `--fail-on`:
+  - 0 when no finding at/above the level
+  - 1 when at least one finding meets the level threshold
+
+Examples
+```bash
+# Basic SARIF to a file and markdown summary to stdout
+nabla scan --file build/firmware.bin --output sarif > results.sarif \
+  --summary md
+
+# Fail CI if any medium+ findings; filter report to medium+ only
+nabla scan --file out/app \
+  --fail-on medium --min-level medium \
+  --output sarif > results.sarif
+
+# Use a custom config and redact local paths
+nabla scan --file ./dist --config ./.nabla/config.yaml --redact-paths --summary md
+```
+
+### sbom
+
+Generates a CycloneDX SBOM from a directory, archive, or single binary.
+
+```bash
+nabla sbom --from <path|url> [--output <file>]
+```
+
+- `--from <path|url>`: Source to analyze (folder, archive, binary, or URL).
+- `--output <file>`: Write SBOM to file (stdout if omitted).
+
+Example
+```bash
+nabla sbom --from ./dist --output sbom.cdx.json
+```
+
+### assess
+
+Evaluates mapped controls against evidence and emits an assessment JSON.
+
+```bash
+nabla assess --file <path> [--framework <name>] [--output <file>]
+```
+
+- `--framework <name>`: `gsma-iot` (default), `etsi-en-303-645`, `fips-140-3`, `fda-premarket`, `nist-800-193`, `nist-800-53-rev5`, `all`.
+- `--output <file>`: Write assessment JSON to file (stdout if omitted).
+
+Output schema (high‑level)
+- `binary`: metadata (name, format, arch, hashes, size)
+- `implemented_controls[]`: `{ control_id, framework, title, implementation_status, implementation_description, evidence[], confidence_score }`
+
+### auth
+
+Authenticate the CLI and manage session state.
+
+```bash
+nabla auth <login|status|logout>
+```
+
+Subcommands
+- `login`: Starts GitHub Device Flow. Stores session at `~/.nabla/session.json`.
+- `status`: Prints current auth/subscription status.
+- `logout`: Clears local session (removes `~/.nabla/session.json`).
