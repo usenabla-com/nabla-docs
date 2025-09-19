@@ -1,9 +1,47 @@
 ---
 title: Home
-description: Start here to explore Nabla Docs.
+description: Learn what Nabla is, why it exists, and how to get productive quickly.
 sidebarTitle: Home
 ---
 
-# Welcome
+# Welcome to Nabla
 
-Start with <a href="/docs/getting-started">Getting started</a> or browse the reference.
+Nabla helps teams ship safer software by evaluating code, binaries, and configuration against clear policy. It produces deterministic, audit‑friendly results you can use locally and in CI to make fast, consistent decisions.
+
+<Callout type="info">New here? Start with Installation, then take the Architecture Overview tour. When ready, run your first evaluation with the CLI.</Callout>
+
+## What is Nabla?
+
+- A policy‑driven evaluation engine that turns observable evidence into explainable outcomes.
+- A CLI you can run locally or in CI/CD to gate changes and generate reports.
+- A simple configuration model for selecting policies, scoping inputs, and tuning outputs.
+
+## Why teams use it
+
+- Consistent decisions: deterministic rule execution and policy mapping.
+- Developer friendly: fast local runs with the same behavior as CI.
+- Audit ready: human‑readable summaries and machine outputs (JSON/SARIF).
+- Extensible: tailor policies, controls, and rules to your environment.
+
+## How it works (at a glance)
+
+1. Discover inputs: repositories, artifacts, binaries, or supplied metadata.
+2. Resolve policy: map selected policies to controls and rules for the run.
+3. Execute rules: evaluate evidence deterministically with pinned versions.
+4. Aggregate results: normalize severities and remediation guidance.
+5. Enforce and publish: fail CI when configured and export reports.
+
+## Quick start
+
+- Install the CLI: 🔗 <a className="font-bold" href="/docs/installation">Installation</a>
+- Understand the moving parts: 🔗 <a className="font-bold" href="/docs/highlevel-overview">Architecture Overview</a>
+- Run and script it: 🔗 <a className="font-bold" href="/docs/cli-reference">CLI Reference</a>
+
+## Core concepts
+
+- <a href="/docs/rules">Rules</a>: atomic checks that evaluate facts.
+- <a href="/docs/controls">Controls</a>: practical requirements implemented by one or more rules.
+- <a href="/docs/configuration">Configuration</a>: select policy, scope inputs, set parameters.
+- <a href="/docs/outputs">Outputs</a>: summaries, JSON, SARIF, and markdown.
+
+If you have feedback or need help, open an issue in your repo, or reach out through your Nabla support channel.
