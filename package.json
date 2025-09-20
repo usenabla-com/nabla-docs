@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && bun run postbuild",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postbuild": "pagefind --site out"
+    "postbuild": "pagefind --site .next/server/app --output-path public/_pagefind && cp -r ./public/_pagefind ./out"
   },
   "dependencies": {
     "next": "^15.5.3",
