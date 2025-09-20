@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && bun run postbuild",
     "start": "next start",
     "lint": "eslint",
     "postbuild": "pagefind --site out"
