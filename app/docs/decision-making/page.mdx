@@ -48,7 +48,7 @@ Practical impact: rules can assert facts like “is statically linked?”, “co
 
 ## Rules: Rhai scripting for precision
 
-[Rhai](https://www.rhai.rs) provides a simple, sandboxed scripting surface. Each rule consumes a BinaryAnalysis and returns a pass/fail (with metadata) that maps to a control, then to a policy outcome.
+[Rhai](https://rhai.rs) provides a simple, sandboxed scripting surface. Each rule consumes a BinaryAnalysis and returns a pass/fail (with metadata) that maps to a control, then to a policy outcome.
 
 Notes
 - Users can use their own custom `scan.rhai` and `assess.rhai` policies, as long as the rules are provided with `input.analysis` and `input.controls` data
