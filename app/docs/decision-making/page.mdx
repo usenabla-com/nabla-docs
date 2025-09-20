@@ -48,33 +48,11 @@ Practical impact: rules can assert facts like “is statically linked?”, “co
 
 ## Rules: Rhai scripting for precision
 
-Rhai provides a simple, sandboxed scripting surface. Each rule consumes a BinaryAnalysis and returns a pass/fail (with metadata) that maps to a control, then to a policy outcome.
-
-```rhai
-// Example: flag static linking without license metadata and secret indicators
-fn evaluate(analysis) {
-  let issues = [];
-
-  if analysis.static_linked && analysis.license_info == null {
-    issues.push("statically linked but missing license_info");
-  }
-
-  if analysis.suspected_secrets.len() > 0 {
-    issues.push(`suspected secrets: ${analysis.suspected_secrets.len()}`);
-  }
-
-  // Use simple symbol heuristics
-  if analysis.detected_symbols.contains("strcpy") {
-    issues.push("uses strcpy (unsafe)");
-  }
-
-  if issues.len() == 0 { return ok(); }
-  else { return violation("binary_hardening", issues); }
-}
-```
+[Rhai](https://www.rhai.rs) provides a simple, sandboxed scripting surface. Each rule consumes a BinaryAnalysis and returns a pass/fail (with metadata) that maps to a control, then to a policy outcome.
 
 Notes
-- Host provides helpers like ok()/violation(), severity, and tagging that the rule can return.
+- Users can use their own custom `scan.rhai` and `assess.rhai` policies, as long as the rules are provided with `input.analysis` and `input.controls` data
+- Host provides helpers like ok(), violation(), severity(), and tagging that the rule can return.
 - Option‑like fields appear as null in scripts; arrays expose len() and contains().
 
 ## Why not an LLM for core evaluation?
